@@ -67,7 +67,6 @@ class TurnConnection {
     if (this.errorCallback) {
       this.errorCallback(error);
     }
-    console.error('sendChannel error:', error);
   }
 
   assignEvent(obj, ev, func) {
@@ -135,7 +134,6 @@ class TurnConnection {
       this.pctpc1 = new CSRTCPeerConnection(servers);
       this.pctpc2 = new CSRTCPeerConnection(servers);
     } catch (err) {
-      console.error('Error creating PCs:', err);
       this.rejectDisconnect(false, new Error('Error creating PCs'));
       return promise;
     }
@@ -144,7 +142,6 @@ class TurnConnection {
 
     // make sure the connection gets closed at some point
     this.connectionTimer = setTimeout(() => {
-      console.error('Connection timeout');
       delete this.connectionTimer;
       this.rejectDisconnect(false, new Error('Connection timeout'));
     }, CONNECTION_TIMEOUT);
@@ -155,7 +152,6 @@ class TurnConnection {
        ('created datachannel');
       this.sendChannel.binaryType = 'arraybuffer';
       this.assignEvent(this.sendChannel, 'error', (error) => {
-        console.error('Datachannel error:', error);
         this.raiseSendError(new Error('Datachannel error'));
         this.rejectDisconnect(true, new Error('Datachannel error'));
       });
@@ -183,12 +179,10 @@ class TurnConnection {
           if (this.errorCallback) {
             this.errorCallback(error);
           }
-          console.error('receiveChannel error:', error);
           this.rejectDisconnect(true, new Error('receiveChannel error'));
         });
       });
     } catch (err) {
-      console.error('Error adding datachannel:', err);
       this.rejectDisconnect(false, new Error('Error adding datachannel'));
       return promise;
     }
@@ -221,7 +215,6 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error starting connection:', err);
       this.rejectDisconnect(false, new Error('Error starting connection'));
       return promise;
     }
@@ -257,7 +250,6 @@ class TurnConnection {
       try {
         this.sendChannel.close();
       } catch (err) {
-        console.error(err);
       }
     }
 
@@ -265,7 +257,6 @@ class TurnConnection {
       try {
         this.pctpc1.close();
       } catch (err) {
-        console.error(err);
       }
     }
     this.pctpc1 = null;
@@ -274,7 +265,6 @@ class TurnConnection {
       try {
         this.pctpc2.close();
       } catch (err) {
-        console.error(err);
       }
     }
     this.pctpc2 = null;
@@ -292,12 +282,10 @@ class TurnConnection {
   }
 
   onCreateOfferError(pc, error) {
-    console.error('Failed to create offer: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to create offer'));
   }
 
   onCreateAnswerError(pc, error) {
-    console.error('Failed to create answer: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to create answer'));
   }
 
@@ -334,7 +322,6 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing offer:', err);
       this.rejectDisconnect(false, new Error('Error processing offer'));
     }
   }
@@ -348,12 +335,10 @@ class TurnConnection {
   }
 
   onSetSessionDescriptionError(pc, error) {
-    console.error('Failed to set session description: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to set session description'));
   }
 
   onSetRemoteSessionDescriptionError(pc, error) {
-    console.error('Failed to set session description: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to set session description'));
   }
 
@@ -378,7 +363,6 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing answer:', err);
       this.rejectDisconnect(false, new Error('Error processing answer'));
     }
   }
@@ -450,7 +434,6 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing ICE candidate:', err);
       this.rejectDisconnect(false, err);
     }
   }
@@ -460,7 +443,6 @@ class TurnConnection {
   }
 
   onAddIceCandidateError(pc, error, isRelay) {
-    console.error(this.getName(pc) + ' failed to add ICE Candidate: ' + error.toString());
     if (isRelay) {
       this.rejectDisconnect(false, new Error('failed to add ICE Candidate'));
     }
@@ -473,7 +455,6 @@ class TurnConnection {
         newstate = pc.iceConnectionState;
       }
       if (newstate === 'failed') {
-        console.error('ICE failure');
         this.rejectDisconnect(true, new Error('ICE failure'));
       }
 
@@ -481,7 +462,6 @@ class TurnConnection {
       if (newstate === 'checking' && !this.iceTimer) {
         this.iceTimer = setTimeout(() => {
           delete this.iceTimer;
-          console.error('ICE timeout');
           this.rejectDisconnect(true, new Error('ICE timeout'));
         }, ICE_CHECKING_TIMEOUT);
       }
@@ -490,9 +470,7 @@ class TurnConnection {
         delete this.iceTimer;
       }
 
-      console.warn('ICE state change:', newstate);
     } catch (err) {
-      console.error('Error processing ICE state change:', err);
       this.rejectDisconnect(false, new Error('Error processing ICE state change'));
     }
   }
@@ -677,7 +655,6 @@ class TurnConnection {
         }
 
         if (!foundActiveCand) {
-          console.error('Active ICE candidate pair not found.');
         }
         resolve(iceResults);
       },
