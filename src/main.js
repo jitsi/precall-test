@@ -37,6 +37,8 @@ class PreCallTest {
     this.rtt = null;
     this.fractionLostBytes = -1;
     this.resultsHandler = null;
+    this.startResolve = null;
+    this.startReject = null;
   }
 
   /*
@@ -45,60 +47,67 @@ class PreCallTest {
 
   /** Start the precall tests
    * @param {JSON} iceServers an RTCIceServer object/array
-   * @param {Function} callback function to call for results
    * @public
    */
-  start(iceServers, callback) {
-    if (this.browserInfo.browserName === Constants.browserName.msie) {
-       ('precalltest: disable for IE');
-      if (this.callback) {
-        this.callback(null, 'Not started: disabled for IE');
-      }
-      return;
-    }
+  start(iceServers) {
     this.iceServers = iceServers;
-    this.callback = callback;
-    if (this.active) {
-      console.warn('Not started: already in progress');
-      if (this.callback) {
-        this.callback(null, 'Not started: already in progress');
+
+    return new Promise((resolve, reject) => {
+      this.startResolve = resolve;
+      this.startReject = reject;
+
+      if (this.browserInfo.browserName === Constants.browserName.msie) {
+        // console.warn('precalltest: disable for IE');
+        // this.callback(null, 'Not started: disabled for IE');
+        this.startReject(new Error('Not started: disabled for IE'));
+        
+        return;
       }
-      return;
-    }
-    if (this.callsInProgress > 0) {
-      console.warn('Not started: call in progress');
-      if (this.callback) {
-        this.callback(null, 'Not started: call in progress');
+
+      if (this.active) {
+        // console.warn('Not started: already in progress');
+        // this.callback(null, 'Not started: already in progress');
+        this.startReject(new Error('Not started: already in progress'));
+        
+        return;
       }
-      return;
-    }
-    if (!iceServers) {
-      console.warn('Not started: no ICE servers given');
-      if (this.callback) {
-        this.callback(null, 'Not started: no ICE servers given');
+
+      if (this.callsInProgress > 0) {
+        // console.warn('Not started: call in progress');
+        // this.callback(null, 'Not started: call in progress');
+        this.startReject(new Error('Not started: call in progress'));
+        
+        return;
       }
-      return;
-    }
 
-     ('PreCallTest start');
-    this.turnTestCounter = 0;
-    this.resultsHandler = new ResultsHandler();
+      if (!iceServers) {
+        // console.warn('Not started: no ICE servers given');
+        // this.callback(null, 'Not started: no ICE servers given');
+        this.startReject(new Error('Not started: no ICE servers given'));
+        
+        return;
+      }
 
-    let endpointInfo = {
-      type: 'browser',
-      os: this.browserInfo.os,
-      osVersion: this.browserInfo.osVersion,
-      buildName: this.browserInfo.browserName,
-      buildVersion: this.browserInfo.browserVersion,
-      userAgent: this.browserInfo.userAgent,
-    };
-    this.resultsHandler.add('endpointInfo', endpointInfo);
+      // console.log('PreCallTest start');
+      this.turnTestCounter = 0;
+      this.resultsHandler = new ResultsHandler();
 
-    this.onlineCheck.start();
+      let endpointInfo = {
+        type: 'browser',
+        os: this.browserInfo.os,
+        osVersion: this.browserInfo.osVersion,
+        buildName: this.browserInfo.browserName,
+        buildVersion: this.browserInfo.browserVersion,
+        userAgent: this.browserInfo.userAgent,
+      };
+      this.resultsHandler.add('endpointInfo', endpointInfo);
 
-    this.active = true;
+      this.onlineCheck.start();
 
-    this._start();
+      this.active = true;
+
+      this._start();
+    });
   }
 
   /** Internal start function
@@ -109,89 +118,85 @@ class PreCallTest {
       return;
     }
     this.turnConnection = new TurnConnection(this.browserInfo);
-    this.turnConnection.connect(this.iceServers)
-    .then(() => {
-       ('TURN connected.');
-      if (!this.active) {
-        this.stop();
-        return;
-      }
-
-      if (this.resultsHandler) {
-        this.resultsHandler.setStatusSuccess();
-      }
-      this.startTurnTests()
-      .then(() => {
-         ('All TURN tests completed');
-        this.stop();
-      }, (e) => {
-         (e);
-        this.stop();
-      });
-    }, (e) => {
-      let continueFlag = e.continueFlag;
-       ('TURN connection failed:', e);
-      if (this.resultsHandler) {
-        this.resultsHandler.failure(e);
-      }
-      if (!continueFlag) {
-        this.turnConnection.disconnect();
-        this.active = false;
-        let message = '';
-        try {
-          message = e.stack;
-        } catch (err) {
-          message = e.toString();
-        }
-        if (!message || message === '') {
-          message = e.toString();
-        }
-
-        if (this.resultsHandler) {
-          this.resultsHandler.setStatusFailed();
-        }
-
-        console.warn('Error:', message);
-        if (this.callback) {
-          this.callback(null, message);
-        }
-        return;
-      }
-      if (this.resultsHandler) {
-        this.resultsHandler.setStatusFailed();
-        if (this.resultsHandler.getFailureNumber() >= FAILURE_RETRIES) {
+    this.turnConnection.connect(this.iceServers).then(
+      () => {
+        // console.log('TURN connected.');
+        if (!this.active) {
           this.stop();
           return;
         }
-      } else {
-        this.stop();
-        return;
-      }
-      // restart if it hasn't failed too often already
-      this.turnConnection.disconnect();
-      setTimeout(() => {
-         ('PreCallTest REstart');
-        this._start();
-      }, 0);
-    });
+
+        if (this.resultsHandler) {
+          this.resultsHandler.setStatusSuccess();
+        }
+        this.startTurnTests().then(() => {
+          // console.log('All TURN tests completed');
+          this.stop();
+        }, (e) => {
+          // console.error(e);
+          this.stop();
+        });
+      }, (e) => {
+        let continueFlag = e.continueFlag;
+        // console.log('TURN connection failed:', e);
+        if (this.resultsHandler) {
+          this.resultsHandler.failure(e);
+        }
+        if (!continueFlag) {
+          this.turnConnection.disconnect();
+          this.active = false;
+          let message = '';
+          try {
+            message = e.stack;
+          } catch (err) {
+            message = e.toString();
+          }
+          if (!message || message === '') {
+            message = e.toString();
+          }
+
+          if (this.resultsHandler) {
+            this.resultsHandler.setStatusFailed();
+          }
+
+          // console.warn('Error:', message);
+          // this.callback(null, message);
+          this.startReject(new Error(message));
+
+          return;
+        }
+        if (this.resultsHandler) {
+          this.resultsHandler.setStatusFailed();
+          if (this.resultsHandler.getFailureNumber() >= FAILURE_RETRIES) {
+            this.stop();
+            return;
+          }
+        } else {
+          this.stop();
+          return;
+        }
+        // restart if it hasn't failed too often already
+        this.turnConnection.disconnect();
+        setTimeout(() => {
+          // console.warn('PreCallTest REstart');
+          this._start();
+        }, 0);
+      });
   }
 
   /** Stop the precall tests
    * @private */
   stop() {
-    if (this.browserInfo.browserName === Constants.browserName.msie) {
-      return;
-    }
     if (!this.active) {
       return;
     }
 
     this.active = false;
     if (this.activeTurnTest) {
-       ('Stopping active test');
+       // console.warn('Stopping active test');
       this.activeTurnTest.forceStop();
     }
-     ('PreCallTest stop');
+    // console.log('PreCallTest stop');
 
     let onlineCheckResults = this.onlineCheck.stop();
     if (this.resultsHandler) {
@@ -204,7 +209,7 @@ class PreCallTest {
       }
 
       // stop everything
-       ('ICE obtained');
+      // console.log('ICE obtained');
       this.turnConnection.disconnect();
 
       // send results
@@ -215,7 +220,7 @@ class PreCallTest {
       }
 
       // stop everything
-       ('ICE failure');
+      // console.log('ICE failure');
       this.turnConnection.disconnect();
 
       // send results
@@ -272,17 +277,16 @@ class PreCallTest {
    */
   sendResults() {
     if (!this.resultsHandler) {
-      if (this.callback) {
-        this.callback(null, 'No results present');
-      }
-      return;
+        // this.callback(null, 'No results present');
+        this.startReject(new Error('No results present'));
+        return;
     }
+
     const results = this.resultsHandler.getResults();
     const resultsMin = this.getPublicPrecalltestResults(results);
-     ('**** Results ', results, resultsMin);
-    if (this.callback) {
-      this.callback(resultsMin, null);
-    }
+    // console.log('**** Results ', results, resultsMin);
+      //this.callback(resultsMin, null);
+    this.startResolve(resultsMin);
   }
 
   /** Call starts
@@ -309,7 +313,7 @@ class PreCallTest {
    */
   crashDisconnect() {
     try {
-       ('something crashed');
+       // console.error('something crashed');
       this.turnConnection.disconnect();
     } catch (err) {
        (err);
@@ -356,14 +360,14 @@ class PreCallTest {
     }
     return test.start() // returns the Promise
     .then(() => {
-       ('Test succeeded', testName);
+      // console.info('Test succeeded', testName);
       this.handleTestResults(testName, test.getResults());
 
       this.turnTestCounter += 1;
       this.activeTurnTest = null;
       return this.startTurnTests();
     }, (e) => {
-       ('Test failed', testName, e);
+      // console.error('Test failed', testName, e);
       this.handleTestResults(testName, test.getResults(), e);
 
       this.turnTestCounter += 1;

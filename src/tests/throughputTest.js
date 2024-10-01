@@ -43,11 +43,11 @@ class ThroughputTest extends TurnTest {
           is stuck in a loop when putting data to the buffer.
           Also, when it is ever supported, there is no removeEventListener which has be taken care of */
       let errMsg = 'Not running throughput test for react-native';
-       (errMsg);
+      // console.error(errMsg);
       this.handleError(new Error(errMsg));
       return;
     }
-     ('start', this.duration);
+    // console.log('start', this.duration);
     this.startSend();
   }
 
@@ -89,7 +89,7 @@ class ThroughputTest extends TurnTest {
         let msgJson = JSON.parse(this.lastMessage);
         rtt = now - msgJson.timestamp;
       } catch (e) {
-        console.error('Error parsing msg:', msg, e);
+        // console.error('Error parsing msg:', msg, e);
       }
 
       // add and reset
@@ -173,7 +173,7 @@ class ThroughputTest extends TurnTest {
     this.sendChannel = this.connection.sendChannel;
     this.usePolling = true;
     if (typeof this.sendChannel.bufferedAmountLowThreshold === 'number') {
-       ('Using the bufferedamountlow event for flow control');
+       // console.log('Using the bufferedamountlow event for flow control');
       this.usePolling = false;
 
       this.sendChannel.bufferedAmountLowThreshold = this.bufferFullThreshold/10;

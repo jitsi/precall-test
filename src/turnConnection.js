@@ -67,7 +67,7 @@ class TurnConnection {
     if (this.errorCallback) {
       this.errorCallback(error);
     }
-    console.error('sendChannel error:', error);
+    // console.error('sendChannel error:', error);
   }
 
   assignEvent(obj, ev, func) {
@@ -128,23 +128,23 @@ class TurnConnection {
       'iceTransportPolicy': 'all',
       'iceServers': this.iceServers,
     };
-     ('ICE servers:', servers);
+    // console.log('ICE servers:', servers);
 
     // PeerConnection objects
     try {
       this.pctpc1 = new CSRTCPeerConnection(servers);
       this.pctpc2 = new CSRTCPeerConnection(servers);
     } catch (err) {
-      console.error('Error creating PCs:', err);
+      // console.error('Error creating PCs:', err);
       this.rejectDisconnect(false, new Error('Error creating PCs'));
       return promise;
     }
 
-     ('created pcs:', this.pctpc1, this.pctpc2);
+    // console.log('created pcs:', this.pctpc1, this.pctpc2);
 
     // make sure the connection gets closed at some point
     this.connectionTimer = setTimeout(() => {
-      console.error('Connection timeout');
+      // console.error('Connection timeout');
       delete this.connectionTimer;
       this.rejectDisconnect(false, new Error('Connection timeout'));
     }, CONNECTION_TIMEOUT);
@@ -152,14 +152,14 @@ class TurnConnection {
     try {
       // Datachannel as only source
       this.sendChannel = this.pctpc1.createDataChannel(datachannelLabel, datachannelSettings);
-       ('created datachannel');
+       // console.log('created datachannel');
       this.sendChannel.binaryType = 'arraybuffer';
       this.assignEvent(this.sendChannel, 'error', (error) => {
-        console.error('Datachannel error:', error);
+        // console.error('Datachannel error:', error);
         this.raiseSendError(new Error('Datachannel error'));
         this.rejectDisconnect(true, new Error('Datachannel error'));
       });
-       ('add onerror event');
+       // console.log('add onerror event');
       this.assignEvent(this.pctpc2, 'datachannel', (event) => {
         let channel = event.channel;
         this.assignEvent(channel, 'open', (event) => {
@@ -170,7 +170,7 @@ class TurnConnection {
         });
         this.assignEvent(channel, 'close', (event) => {
           if (this && this.disconnect) {
-             ('datachannel close');
+            // console.log('datachannel close');
             this.disconnect();
           }
         });
@@ -183,12 +183,12 @@ class TurnConnection {
           if (this.errorCallback) {
             this.errorCallback(error);
           }
-          console.error('receiveChannel error:', error);
+          // console.error('receiveChannel error:', error);
           this.rejectDisconnect(true, new Error('receiveChannel error'));
         });
       });
     } catch (err) {
-      console.error('Error adding datachannel:', err);
+      // console.error('Error adding datachannel:', err);
       this.rejectDisconnect(false, new Error('Error adding datachannel'));
       return promise;
     }
@@ -210,7 +210,7 @@ class TurnConnection {
       });
 
       // Start connection procedure
-       ('pctpc1 createOffer start');
+      // console.log('pctpc1 createOffer start');
       this.pctpc1.createOffer()
       .then(
         (desc, test) => {
@@ -221,7 +221,7 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error starting connection:', err);
+      // console.error('Error starting connection:', err);
       this.rejectDisconnect(false, new Error('Error starting connection'));
       return promise;
     }
@@ -237,7 +237,7 @@ class TurnConnection {
   rejectDisconnect(continueFlag, err) {
     this.disconnect();
     if (this.rejectCb) {
-       ('rejectDisconnect');
+      // console.log('rejectDisconnect');
       err.continueFlag = continueFlag;
       this.rejectCb(err);
     }
@@ -250,14 +250,14 @@ class TurnConnection {
    * Stop the precall tests
    */
   disconnect() {
-     ('disconnect');
+    // console.log('disconnect');
     clearTimeout(this.connectionTimer);
     clearTimeout(this.iceTimer);
     if (this.sendChannel) {
       try {
         this.sendChannel.close();
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     }
 
@@ -265,7 +265,7 @@ class TurnConnection {
       try {
         this.pctpc1.close();
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     }
     this.pctpc1 = null;
@@ -274,7 +274,7 @@ class TurnConnection {
       try {
         this.pctpc2.close();
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     }
     this.pctpc2 = null;
@@ -292,18 +292,18 @@ class TurnConnection {
   }
 
   onCreateOfferError(pc, error) {
-    console.error('Failed to create offer: ' + error.toString());
+    // console.error('Failed to create offer: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to create offer'));
   }
 
   onCreateAnswerError(pc, error) {
-    console.error('Failed to create answer: ' + error.toString());
+    // console.error('Failed to create answer: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to create answer'));
   }
 
   onCreateOfferSuccess(desc) {
     try {
-       ('Offer from pctpc1, pctpc1 setLocalDescription start', this.pctpc1);
+      // console.log('Offer from pctpc1, pctpc1 setLocalDescription start', this.pctpc1);
       this.pctpc1.setLocalDescription(desc).then(
         () => {
           this.onSetLocalSuccess(this.pctpc1);
@@ -312,7 +312,7 @@ class TurnConnection {
           this.onSetSessionDescriptionError(this.pctpc1, e);
         }
       );
-       ('pctpc2 setRemoteDescription start');
+       // console.log('pctpc2 setRemoteDescription start');
       this.pctpc2.setRemoteDescription(desc).then(
         () => {
           this.onSetRemoteSuccess(this.pctpc2);
@@ -321,7 +321,7 @@ class TurnConnection {
           this.onSetRemoteSessionDescriptionError(this.pctpc2, e);
         }
       );
-       ('pctpc2 createAnswer start');
+      // console.log('pctpc2 createAnswer start');
       // Since the 'remote' side has no media stream we need
       // to pass in the right constraints in order for it to
       // accept the incoming offer of audio and video.
@@ -334,7 +334,7 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing offer:', err);
+      // console.error('Error processing offer:', err);
       this.rejectDisconnect(false, new Error('Error processing offer'));
     }
   }
@@ -348,18 +348,18 @@ class TurnConnection {
   }
 
   onSetSessionDescriptionError(pc, error) {
-    console.error('Failed to set session description: ' + error.toString());
+    // console.error('Failed to set session description: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to set session description'));
   }
 
   onSetRemoteSessionDescriptionError(pc, error) {
-    console.error('Failed to set session description: ' + error.toString());
+    // console.error('Failed to set session description: ' + error.toString());
     this.rejectDisconnect(false, new Error('Failed to set session description'));
   }
 
   onCreateAnswerSuccess(desc) {
     try {
-       ('Answer from pctpc2, pctpc2 setLocalDescription start');
+      // console.log('Answer from pctpc2, pctpc2 setLocalDescription start');
       this.pctpc2.setLocalDescription(desc).then(
         () => {
           this.onSetLocalSuccess(this.pctpc2);
@@ -368,7 +368,7 @@ class TurnConnection {
           this.onSetSessionDescriptionError(this.pctpc2, e);
         }
       );
-       ('pctpc1 setRemoteDescription start');
+      // console.log('pctpc1 setRemoteDescription start');
       this.pctpc1.setRemoteDescription(desc).then(
         () => {
           this.onSetRemoteSuccess(this.pctpc1);
@@ -378,7 +378,7 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing answer:', err);
+      // console.error('Error processing answer:', err);
       this.rejectDisconnect(false, new Error('Error processing answer'));
     }
   }
@@ -399,7 +399,7 @@ class TurnConnection {
       let parsed = new ParsedIceCandidate(event.candidate);
 
       if (pc == this.pctpc1) {
-         ('candidate:', parsed.getType(), parsed);
+        // console.log('candidate:', parsed.getType(), parsed);
 
         if (this.statshandler.codeBase == Constants.codeBaseType.chrome) {
           // check seen candidates for Chrome (doesn't work reliably with getStats)
@@ -450,7 +450,7 @@ class TurnConnection {
         }
       );
     } catch (err) {
-      console.error('Error processing ICE candidate:', err);
+      // console.error('Error processing ICE candidate:', err);
       this.rejectDisconnect(false, err);
     }
   }
@@ -460,7 +460,7 @@ class TurnConnection {
   }
 
   onAddIceCandidateError(pc, error, isRelay) {
-    console.error(this.getName(pc) + ' failed to add ICE Candidate: ' + error.toString());
+    // console.error(this.getName(pc) + ' failed to add ICE Candidate: ' + error.toString());
     if (isRelay) {
       this.rejectDisconnect(false, new Error('failed to add ICE Candidate'));
     }
@@ -473,7 +473,7 @@ class TurnConnection {
         newstate = pc.iceConnectionState;
       }
       if (newstate === 'failed') {
-        console.error('ICE failure');
+        // console.error('ICE failure');
         this.rejectDisconnect(true, new Error('ICE failure'));
       }
 
@@ -481,7 +481,7 @@ class TurnConnection {
       if (newstate === 'checking' && !this.iceTimer) {
         this.iceTimer = setTimeout(() => {
           delete this.iceTimer;
-          console.error('ICE timeout');
+          // console.error('ICE timeout');
           this.rejectDisconnect(true, new Error('ICE timeout'));
         }, ICE_CHECKING_TIMEOUT);
       }
@@ -490,9 +490,9 @@ class TurnConnection {
         delete this.iceTimer;
       }
 
-      console.warn('ICE state change:', newstate);
+      // console.warn('ICE state change:', newstate);
     } catch (err) {
-      console.error('Error processing ICE state change:', err);
+      // console.error('Error processing ICE state change:', err);
       this.rejectDisconnect(false, new Error('Error processing ICE state change'));
     }
   }
@@ -542,7 +542,7 @@ class TurnConnection {
         return;
       }
       this.statshandler.getIceCandidates(this.pctpc1).then((results) => {
-         ('ICE results:', results);
+         // console.log('ICE results:', results);
         iceResults.localIP = this.localIp;
         iceResults.localIPType = this.localIpType;
         iceResults.numberOfLocalIPs = this.numberOfLocalIp;
@@ -587,7 +587,7 @@ class TurnConnection {
 
               // fill infos for active pair
               if (cand.id == pair.localCandidateId) {
-                 ('Active candidate local transport:', cand);
+                 // console.log('Active candidate local transport:', cand);
 
                 iceResults.turnIpAddress = ip;
                 iceResults.turnNetworkType = cand.networkType;
@@ -677,7 +677,7 @@ class TurnConnection {
         }
 
         if (!foundActiveCand) {
-          console.error('Active ICE candidate pair not found.');
+          // console.error('Active ICE candidate pair not found.');
         }
         resolve(iceResults);
       },

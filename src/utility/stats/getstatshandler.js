@@ -143,7 +143,7 @@ class GetStatsHandler {
         statsHandler(stats, callback);
       })
       .catch(function(e) {
-         ('Error ', e);
+         // console.error('Error ', e);
         self.isPromiseBased = false;
         pc.getStats((stats) => {
           statsHandler(stats, callback);

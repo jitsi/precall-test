@@ -34,7 +34,7 @@ class LossTest extends TurnTest {
       this.handleError(new Error(errMsg));
       return;
     }
-     ('LossTest start', this.duration);
+     // console.log('LossTest start', this.duration);
     let now = Timestamps.getCurrent();
     this.results.startTimestamp = now;
     this.startSend();
@@ -103,7 +103,7 @@ class LossTest extends TurnTest {
     try {
       msgJson = JSON.parse(this.lastMessage);
     } catch (e) {
-      console.error('Error parsing msg:', msg, e);
+      // console.error('Error parsing msg:', msg, e);
       return;
     }
     if (msgJson) {
@@ -115,7 +115,7 @@ class LossTest extends TurnTest {
       this.results.bytesSent = -1;
       this.results.fractionLostBytes = -1;
     }
-     ('Loss Results are ', this.results);
+     // console.log('Loss Results are ', this.results);
   }
 
   stop() {
