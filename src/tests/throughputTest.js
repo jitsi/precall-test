@@ -89,6 +89,7 @@ class ThroughputTest extends TurnTest {
         let msgJson = JSON.parse(this.lastMessage);
         rtt = now - msgJson.timestamp;
       } catch (e) {
+        console.error('Error parsing msg:', msg, e);
       }
 
       // add and reset

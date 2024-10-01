@@ -73,6 +73,7 @@ class TurnTest {
    * @protected
    */
   initiate() {
+    console.error('initiate not implemented');
   }
 
   /** Handle the response for a sent msg
@@ -80,6 +81,7 @@ class TurnTest {
    * @protected
    */
   handleMessage(msg) {
+    console.error('handleMessage not implemented');
   }
 
   /** Handle an error occuring on the connection's datachannel
@@ -87,6 +89,7 @@ class TurnTest {
    * @protected
    */
   handleError(error) {
+    console.error('handleError not implemented');
   }
 
   /*

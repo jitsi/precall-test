@@ -103,6 +103,7 @@ class LossTest extends TurnTest {
     try {
       msgJson = JSON.parse(this.lastMessage);
     } catch (e) {
+      console.error('Error parsing msg:', msg, e);
       return;
     }
     if (msgJson) {

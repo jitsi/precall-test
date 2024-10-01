@@ -59,18 +59,21 @@ class PreCallTest {
     this.iceServers = iceServers;
     this.callback = callback;
     if (this.active) {
+      console.warn('Not started: already in progress');
       if (this.callback) {
         this.callback(null, 'Not started: already in progress');
       }
       return;
     }
     if (this.callsInProgress > 0) {
+      console.warn('Not started: call in progress');
       if (this.callback) {
         this.callback(null, 'Not started: call in progress');
       }
       return;
     }
     if (!iceServers) {
+      console.warn('Not started: no ICE servers given');
       if (this.callback) {
         this.callback(null, 'Not started: no ICE servers given');
       }
@@ -148,6 +151,7 @@ class PreCallTest {
           this.resultsHandler.setStatusFailed();
         }
 
+        console.warn('Error:', message);
         if (this.callback) {
           this.callback(null, message);
         }
