@@ -1,6 +1,6 @@
 {
   "name": "@jitsi/precall-test",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A JavaScript module for conducting connectivity and performance pre-call tests.",
   "main": "src/main.js",
   "dependencies": {},
